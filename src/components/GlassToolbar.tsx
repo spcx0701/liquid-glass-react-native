@@ -5,8 +5,8 @@ import { GlassSurface, labelColor, useGlass, withAlpha } from '../engine'
 export function GlassToolbar({ children, style }: { children: React.ReactNode; style?: any }) {
   return (
     <GlassSurface
+      material="chrome"
       radius={22}
-      refraction={30}
       style={[
         { height: 44, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, gap: 2 },
         style,

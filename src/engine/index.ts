@@ -1,7 +1,6 @@
 export { GlassSurface, type GlassSurfaceProps } from './GlassSurface'
 export { GlassProvider, useGlass, type GlassContextValue } from './GlassProvider'
 export {
-  VARIANTS,
   ACCENT,
   withAlpha,
   labelColor,
@@ -12,6 +11,7 @@ export {
   type Appearance,
   type Depth,
 } from './theme'
+export { RECIPES, SDF_GLASS, resolveRecipe, type SystemRecipe, type RecipeName, type MaterialRole } from './recipes'
 export { Motion, spring, timing, useGlassPress, type GlassPress } from './springs'
 export { useLensFilter, ensureLensFilter, type LensSpec } from './filters'
 export { generateLensMap } from './displacement'

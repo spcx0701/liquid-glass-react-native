@@ -26,7 +26,7 @@ export function GlassSidebar({
   }, [value, y])
 
   return (
-    <GlassSurface radius={20} style={[{ width: 220, padding: PAD }, style]}>
+    <GlassSurface material="content" radius={20} style={[{ width: 220, padding: PAD }, style]}>
       <Animated.View
         pointerEvents="none"
         style={{

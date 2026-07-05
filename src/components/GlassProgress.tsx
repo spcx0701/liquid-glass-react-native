@@ -32,6 +32,7 @@ export function GlassProgress({
 
   return (
     <GlassSurface
+      material="control"
       radius={5}
       refraction={0}
       depth="flat"

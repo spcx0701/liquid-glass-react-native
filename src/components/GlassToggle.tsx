@@ -19,7 +19,7 @@ export function GlassToggle({ value, onChange }: { value: boolean; onChange: (v:
       onPressIn={() => timing(press, 1, 110).start()}
       onPressOut={() => timing(press, 0, 260).start()}
     >
-      <GlassSurface radius={16} refraction={16} bezel={8} style={{ width: 54, height: 32 }}>
+      <GlassSurface radius={16} style={{ width: 54, height: 32 }}>
         <Animated.View
           pointerEvents="none"
           style={[

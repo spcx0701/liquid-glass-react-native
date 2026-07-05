@@ -43,7 +43,7 @@ export function GlassModal({
           transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.88, 1] }) }],
         }}
       >
-        <GlassSurface radius={26} depth="floating" chromatic refraction={56} bezel={18} style={{ width: 420, padding: 22 }}>
+        <GlassSurface material="platters" radius={26} depth="floating" chromatic style={{ width: 420, padding: 22 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <Pressable
               onPress={onClose}

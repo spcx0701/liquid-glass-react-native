@@ -50,7 +50,7 @@ export function GlassMenu({ label, icon, items }: { label: string; icon?: string
               ],
             }}
           >
-            <GlassSurface radius={16} refraction={30} depth="floating" style={{ minWidth: 210, padding: 5 }}>
+            <GlassSurface material="platters" radius={16} depth="floating" style={{ minWidth: 210, padding: 5 }}>
               {items.map(item => (
                 <MenuRow key={item.label} item={item} close={close} />
               ))}

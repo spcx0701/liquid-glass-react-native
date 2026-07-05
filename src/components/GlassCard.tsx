@@ -20,7 +20,7 @@ export function GlassCard({
   const glass = useGlass()
   const dark = glass.appearance === 'dark'
   return (
-    <GlassSurface variant={variant} chromatic={chromatic} radius={24} style={[{ padding: 20 }, style]}>
+    <GlassSurface material="content" variant={variant} chromatic={chromatic} radius={24} style={[{ padding: 20 }, style]}>
       {title ? (
         <Text style={{ fontSize: 16, fontWeight: '700', color: labelColor(dark), marginBottom: 4 }}>{title}</Text>
       ) : null}

@@ -51,7 +51,7 @@ export function GlassSlider({
       onLayout={(e: any) => setW(e.nativeEvent.layout.width)}
       style={[{ height: 30, justifyContent: 'center', cursor: 'pointer' }, style]}
     >
-      <GlassSurface radius={5} refraction={0} depth="flat" style={{ height: 8 }}>
+      <GlassSurface material="control" radius={5} refraction={0} depth="flat" style={{ height: 8 }}>
         <View
           pointerEvents="none"
           style={{
@@ -70,7 +70,7 @@ export function GlassSlider({
         pointerEvents="none"
         style={{ position: 'absolute', left: knobX, top: 3, transform: [{ scale: knobScale }] }}
       >
-        <GlassSurface variant="clear" radius={KNOB / 2} refraction={44} bezel={9} style={{ width: KNOB, height: KNOB }} />
+        <GlassSurface variant="clear" radius={KNOB / 2} style={{ width: KNOB, height: KNOB }} />
       </Animated.View>
     </View>
   )

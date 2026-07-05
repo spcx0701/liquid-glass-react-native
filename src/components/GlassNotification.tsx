@@ -48,9 +48,9 @@ function NotificationCard({ notice, onDismiss }: { notice: Notice; onDismiss: (i
     <Animated.View style={{ transform: [{ translateX: x }] }}>
       <Pressable onPress={dismiss}>
         <GlassSurface
+          material="platters"
           radius={18}
           depth="floating"
-          refraction={40}
           style={{ width: 340, padding: 13, flexDirection: 'row', gap: 12, alignItems: 'center' }}
         >
           <View

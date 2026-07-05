@@ -1,28 +1,32 @@
 # Liquid Glass · React Native
 
-The macOS 26 (Tahoe) **Liquid Glass** material system, analyzed on a real Tahoe machine
-and translated into React Native — a core glass engine plus a full interactive component
-library, running in the browser through `react-native-web`.
+The macOS 26 (Tahoe) **Liquid Glass** material system translated into React Native —
+built from implementation data **extracted directly from macOS** (CoreMaterial recipe
+plists, QuartzCore's CASDF glass effects, a live NSGlassEffectView layer tree), not
+from eyeballed screenshots. Core glass engine + a full interactive component library,
+running in the browser through `react-native-web`.
 
 **Live demo:** https://spcx0701.github.io/liquid-glass-react-native/
 *(open in Chrome/Edge/Arc for true refraction; Safari/Firefox get the frosted fallback)*
 
-**The analysis:** [docs/ANALYSIS.md](docs/ANALYSIS.md) — each observed macOS behavior and
-the engine module that reproduces it.
+**The extraction:** [docs/EXTRACTION.md](docs/EXTRACTION.md) — how the system data was
+pulled off macOS 26.4.1 and every extracted value.
+**The analysis:** [docs/ANALYSIS.md](docs/ANALYSIS.md) — the behavioral model those
+values implement.
 
 ## What the engine does
 
-| macOS Liquid Glass behavior | Engine implementation |
+| macOS implementation (extracted) | Engine implementation |
 | --- | --- |
-| Edge lensing (refraction) | Rounded-rect SDF → displacement map → `feDisplacementMap` in `backdrop-filter` — [`displacement.ts`](src/engine/displacement.ts), [`filters.ts`](src/engine/filters.ts) |
-| Frosting with vibrancy | blur + `saturate()` per variant — [`theme.ts`](src/engine/theme.ts) |
-| Regular / Clear variants | `VARIANTS` material specs, app-wide default via provider |
-| Specular rim light | Inset bevel shadow stack from a fixed overhead light |
-| Behind-content adaptivity | Offscreen-canvas `LuminanceSampler` + nested `GlassProvider` appearance cascade — [`wallpaper.ts`](src/engine/wallpaper.ts) |
-| Gel-like interactivity | Spring presets: press-recede, gleam, overshoot release — [`springs.ts`](src/engine/springs.ts) |
-| Morphing selection | Single glass pill animated between states (`Motion.morph`) |
-| Chromatic dispersion | Per-channel displacement (R 1.16× / G 1× / B 0.84×) + screen recombine |
-| Reduce transparency | Provider flag swaps every surface to near-opaque |
+| `CASDFGlassDisplacementEffect` (height 20, curvature 1, angle 0) over the shape's SDF | Rounded-rect SDF → displacement map → `feDisplacementMap` in `backdrop-filter` — [`displacement.ts`](src/engine/displacement.ts), [`filters.ts`](src/engine/filters.ts) |
+| CoreMaterial recipes: `platformContentGlass` (blur 45 + exact 4×5 matrix), `platters` (sat 2.4), `dockLight/Dark`, `toolbarButtonBackground`, `platformChrome*`, `platformContent*` | Verbatim recipe data compiled into SVG primitives (`feGaussianBlur`, `feColorMatrix`, `feComponentTransfer`) — [`recipes.ts`](src/engine/recipes.ts) |
+| `CASDFGlassHighlightEffect` (angle π/2, spread π, amount 0.5) | Specular rim sampled from the cosine falloff as inset bevels — [`theme.ts`](src/engine/theme.ts) |
+| `CABackdropLayer` scale 0.25 (regular) / 0.5 (clear) | Clear variant halves effective frost |
+| `CABackdropLayer.tracksLuma`, `lumaUpdateRate` 0.25 | Offscreen-canvas `LuminanceSampler` at 4 Hz + nested `GlassProvider` appearance cascade — [`wallpaper.ts`](src/engine/wallpaper.ts) |
+| CA `chromaticAberrationMap` filter | Per-channel displacement + screen recombine |
+| Interactive gel response | Spring presets: press-recede, gleam, overshoot release — [`springs.ts`](src/engine/springs.ts) |
+| SDF `operation=union` + `mergeElements` (liquid merging) | Morphing selection pills (`Motion.morph`) |
+| `platformChrome*ReduceTransparency` recipes | Provider flag swaps every surface to near-opaque |
 
 ## Components (all interactive in the demo)
 

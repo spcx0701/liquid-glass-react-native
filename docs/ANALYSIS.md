@@ -1,10 +1,11 @@
 # Liquid Glass: how the macOS 26 material actually behaves
 
-This analysis was written against a real Tahoe machine — macOS **26.4.1 (25E253)**, light
-appearance, transparency enabled, default accent — by observing system surfaces
-(Control Center, menus, the Dock, sliders, toolbars, notifications) and Apple's public
-material documentation. Each observed behavior below maps to the module in
-[`src/engine/`](../src/engine) that reproduces it.
+This analysis was written against a real Tahoe machine — macOS **26.4.1 (25E253)**.
+The implementation data — CoreMaterial recipes, QuartzCore's CASDF glass effect
+parameters, the live NSGlassEffectView layer tree — was extracted directly from that
+system; see **[EXTRACTION.md](EXTRACTION.md)** for the forensic log and the exact
+values. This document explains the behavioral model those values implement, and maps
+each behavior to the module in [`src/engine/`](../src/engine) that reproduces it.
 
 ## 1. The material is a lens, not a blur
 
@@ -14,10 +15,15 @@ progressively toward the rim**. Watch any Control Center module over the wallpap
 center shows frosted backdrop, but the outer ~15 px visibly *pulls in* content from
 beyond the edge, compressed and curved. Apple calls this **lensing**.
 
-**Engine translation** — [`displacement.ts`](../src/engine/displacement.ts): the surface
-shape is a rounded-rectangle signed distance field. Pixels within `bezel` px of the edge
-are displaced along the SDF gradient (the outward normal) with a quadratic falloff
-(`mag = t²`), encoded into an R/G displacement map, and applied to the backdrop with
+**This is literally how Apple implements it**: QuartzCore's
+`CASDFGlassDisplacementEffect` drives a displacement over the surface's signed distance
+field, parameterized by `height` (20), `curvature` (1.0) and `angle` (0) — values read
+from live instances on this machine.
+
+**Engine translation** — [`displacement.ts`](../src/engine/displacement.ts): the same
+architecture — a rounded-rectangle SDF; pixels within `height` px of the edge are
+displaced along the SDF gradient (the outward normal) with a `t^(2·curvature)` profile,
+encoded into an R/G displacement map and applied to the backdrop with
 `feDisplacementMap` inside `backdrop-filter` ([`filters.ts`](../src/engine/filters.ts)).
 The center of every surface has zero displacement — exactly like the real material.
 
@@ -26,8 +32,11 @@ The center of every surface has zero displacement — exactly like the real mate
 The blur behind glass is paired with a saturation boost so the backdrop's colors stay
 vivid instead of washing out gray. Regular glass frosts heavily; clear glass barely.
 
-**Engine translation** — `saturate(1.5)` chained after the lens filter;
-per-variant blur radii in [`theme.ts`](../src/engine/theme.ts).
+**Engine translation** — the exact recipe pipelines from
+[`recipes.ts`](../src/engine/recipes.ts): `platformContentGlass` is blur 45 followed by
+its verbatim color matrix (≡ 0.629·saturate(1.589) + 0.235); menus use `platters`
+(blur 30, saturate 2.4, luminance curve); the dock, fields and chrome each use their
+own extracted recipe.
 
 ## 3. Two variants: Regular and Clear
 

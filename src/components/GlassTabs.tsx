@@ -27,6 +27,7 @@ export function GlassTabs({
 
   return (
     <GlassSurface
+      material="control"
       radius={22}
       refraction={0}
       onLayout={(e: any) => setW(e.nativeEvent.layout.width)}

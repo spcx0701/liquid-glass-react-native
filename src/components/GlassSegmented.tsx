@@ -29,6 +29,7 @@ export function GlassSegmented({
 
   return (
     <GlassSurface
+      material="control"
       radius={18}
       refraction={0}
       onLayout={(e: any) => setW(e.nativeEvent.layout.width)}

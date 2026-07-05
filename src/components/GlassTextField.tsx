@@ -35,7 +35,7 @@ export function GlassTextField({
           opacity: focus,
         }}
       />
-      <GlassSurface radius={12} refraction={0} style={{ height: 40, justifyContent: 'center', paddingHorizontal: 14 }}>
+      <GlassSurface material="control" radius={12} refraction={0} style={{ height: 40, justifyContent: 'center', paddingHorizontal: 14 }}>
         <TextInput
           value={value}
           onChangeText={onChangeText}

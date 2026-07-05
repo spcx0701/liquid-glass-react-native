@@ -1,42 +1,12 @@
-// Material definitions for the two Liquid Glass variants.
-//
-// "Regular" is the workhorse: heavier frost, adaptive tint, guaranteed
-// legibility for content sitting on it. "Clear" is nearly transparent with
-// stronger lensing, meant for surfaces over rich media where the backdrop
-// should dominate. These numbers were tuned side-by-side against macOS 26.4
-// controls (Control Center, menus, Dock) on the machine this was built on.
+// Shared appearance definitions. The frost/color pipeline itself lives in
+// recipes.ts — verbatim CoreMaterial data extracted from the system — and is
+// applied by GlassSurface/filters; nothing here invents material physics.
+
+import { SDF_GLASS } from './recipes'
 
 export type GlassVariant = 'regular' | 'clear'
 export type Appearance = 'light' | 'dark'
 export type Depth = 'flat' | 'raised' | 'floating'
-
-export interface VariantSpec {
-  blur: number
-  saturate: number
-  refraction: number
-  bezel: number
-  tintLight: string
-  tintDark: string
-}
-
-export const VARIANTS: Record<GlassVariant, VariantSpec> = {
-  regular: {
-    blur: 9,
-    saturate: 1.5,
-    refraction: 44,
-    bezel: 15,
-    tintLight: 'rgba(255,255,255,0.34)',
-    tintDark: 'rgba(40,40,46,0.42)',
-  },
-  clear: {
-    blur: 2.5,
-    saturate: 1.35,
-    refraction: 72,
-    bezel: 20,
-    tintLight: 'rgba(255,255,255,0.08)',
-    tintDark: 'rgba(18,18,22,0.14)',
-  },
-}
 
 export const ACCENT = '#0A84FF'
 
@@ -64,20 +34,24 @@ export function surfaceShadow(depth: Depth, dark: boolean): string {
   return `0 24px 60px rgba(0,0,0,${(0.28 * k).toFixed(3)}), 0 6px 16px rgba(0,0,0,${(0.13 * k).toFixed(3)})`
 }
 
-// Specular rim: a fixed virtual light source above the surface. The bright
-// inner bevel on the top edge plus faint counter-light below is what reads
-// as "glass" even before refraction kicks in.
-export function rimHighlight(dark: boolean, variant: GlassVariant): string {
-  const hi = variant === 'clear' ? (dark ? 0.38 : 0.6) : dark ? 0.26 : 0.7
-  const lo = hi * 0.4
+// Specular rim — CASDFGlassHighlightEffect with its extracted defaults:
+// angle π/2 (light from straight above), spread π (falls to zero at the
+// horizontal), amount 0.5. The inset-shadow stack samples that cosine
+// falloff at the top/side/bottom edges.
+export function rimHighlight(dark: boolean, _variant: GlassVariant): string {
+  const a = SDF_GLASS.highlight.amount // 0.5, extracted
+  const k = dark ? 0.8 : 1
+  const top = a * k // cos(0)
+  const side = a * Math.cos(Math.PI / 2 - Math.PI / 8) * k // near the spread's edge
+  const bottom = side * 0.5 // outside the spread; ambient only
   return [
-    `inset 0 1.5px 1px -0.5px rgba(255,255,255,${hi.toFixed(2)})`,
-    `inset 1px 0 1px -0.5px rgba(255,255,255,${lo.toFixed(2)})`,
-    `inset -1px 0 1px -0.5px rgba(255,255,255,${(lo * 0.8).toFixed(2)})`,
-    `inset 0 -1.5px 1px -0.5px rgba(255,255,255,${(lo * 0.9).toFixed(2)})`,
+    `inset 0 1.5px 1px -0.5px rgba(255,255,255,${top.toFixed(2)})`,
+    `inset 1px 0 1px -0.5px rgba(255,255,255,${side.toFixed(2)})`,
+    `inset -1px 0 1px -0.5px rgba(255,255,255,${side.toFixed(2)})`,
+    `inset 0 -1.5px 1px -0.5px rgba(255,255,255,${bottom.toFixed(2)})`,
   ].join(', ')
 }
 
 export function borderColor(dark: boolean): string {
-  return dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.5)'
+  return dark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.35)'
 }

@@ -38,7 +38,7 @@ export function GlassTooltip({ label, children }: { label: string; children: Rea
             ],
           }}
         >
-          <GlassSurface radius={10} refraction={0} depth="floating" style={{ paddingHorizontal: 10, paddingVertical: 6 }}>
+          <GlassSurface material="platters" radius={10} refraction={0} depth="floating" style={{ paddingHorizontal: 10, paddingVertical: 6 }}>
             <Text style={{ fontSize: 12.5, fontWeight: '500', color: labelColor(dark), whiteSpace: 'nowrap' }}>
               {label}
             </Text>

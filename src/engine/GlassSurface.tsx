@@ -1,20 +1,25 @@
 import React, { useCallback, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useGlass } from './GlassProvider'
-import { VARIANTS, borderColor, rimHighlight, surfaceShadow, type Depth, type GlassVariant } from './theme'
+import { borderColor, rimHighlight, surfaceShadow, type Depth, type GlassVariant } from './theme'
 import { useLensFilter } from './filters'
 import { supportsBackdrop } from './capabilities'
+import { SDF_GLASS, resolveRecipe, type MaterialRole } from './recipes'
 
 export interface GlassSurfaceProps {
   variant?: GlassVariant
+  /** Which system material backs this surface (maps to a CoreMaterial recipe). */
+  material?: MaterialRole
   radius?: number
-  /** Optional tint override (e.g. accent-tinted glass). */
+  /** Optional tint overlay (e.g. accent-tinted glass); system glass has none. */
   tint?: string
-  /** Displacement strength in px; 0 disables lensing (frost only). */
+  /** Rim displacement in px; 0 disables lensing. Default 2× SDF height (40). */
   refraction?: number
-  blur?: number
-  bezel?: number
-  /** RGB dispersion fringe on the lens rim. */
+  /** Lens profile shape — CASDFGlassDisplacementEffect.curvature (system default 1). */
+  curvature?: number
+  /** Frost multiplier; clear glass halves effective frost (backdropScale 0.25→0.5). */
+  blurScale?: number
+  /** RGB dispersion fringe (CA `chromaticAberrationMap`). */
   chromatic?: boolean
   depth?: Depth
   style?: any
@@ -23,18 +28,21 @@ export interface GlassSurfaceProps {
   children?: React.ReactNode
 }
 
-// The core material. Three layers:
-//  1. backdrop layer — refracts (SVG displacement via backdrop-filter),
-//     frosts (blur+saturate) and tints whatever is painted beneath;
-//  2. specular rim — bevel highlights from a fixed overhead light source;
-//  3. the surface's own content, drawn on top.
+// The core material. Three layers, mirroring the layer tree of a live
+// NSGlassEffectView (CABackdropLayer + glassBackground filter, CASDF shape,
+// rim highlight, then content):
+//  1. backdrop layer — lenses and frosts what's painted beneath through the
+//     exact CoreMaterial recipe pipeline;
+//  2. specular rim — CASDFGlassHighlightEffect (light from straight above);
+//  3. the surface's own content.
 export function GlassSurface({
   variant,
+  material,
   radius = 16,
   tint,
   refraction,
-  blur,
-  bezel,
+  curvature,
+  blurScale,
   chromatic = false,
   depth = 'raised',
   style,
@@ -44,8 +52,8 @@ export function GlassSurface({
 }: GlassSurfaceProps) {
   const glass = useGlass()
   const activeVariant = variant ?? glass.defaultVariant
-  const v = VARIANTS[activeVariant]
   const dark = glass.appearance === 'dark'
+  const { recipe, name: recipeName } = resolveRecipe(material ?? 'glass', dark)
   const [size, setSize] = useState({ w: 0, h: 0 })
 
   const handleLayout = useCallback(
@@ -60,13 +68,20 @@ export function GlassSurface({
     [onLayout],
   )
 
+  // Clear glass captures its backdrop at 0.5 scale instead of 0.25 (observed
+  // live on NSGlassEffectView style=1), i.e. half the effective frost.
+  const effectiveBlurScale =
+    blurScale ?? (activeVariant === 'clear' ? SDF_GLASS.backdrop.scaleRegular / SDF_GLASS.backdrop.scaleClear : 1)
+  const refr = glass.reduceTransparency ? 0 : refraction ?? SDF_GLASS.displacement.height * 2
+
   const filterId = useLensFilter(
     size.w,
     size.h,
     radius,
-    bezel ?? v.bezel,
-    glass.reduceTransparency ? 0 : refraction ?? v.refraction,
-    blur ?? v.blur,
+    recipeName,
+    refr,
+    curvature ?? SDF_GLASS.displacement.curvature,
+    effectiveBlurScale,
     chromatic,
   )
 
@@ -74,11 +89,16 @@ export function GlassSurface({
   let background: string
   if (glass.reduceTransparency) {
     background = dark ? 'rgba(44,44,48,0.96)' : 'rgba(247,247,249,0.96)'
+  } else if (filterId) {
+    // Exact recipe pipeline runs inside the SVG filter; no tint needed —
+    // the system material has no white overlay either.
+    backdropFilter = `url(#${filterId})`
+    background = tint ?? 'transparent'
+  } else if (supportsBackdrop) {
+    backdropFilter = recipe.cssApprox
+    background = tint ?? 'transparent'
   } else {
-    background = tint ?? (dark ? v.tintDark : v.tintLight)
-    if (filterId) backdropFilter = `url(#${filterId}) saturate(${v.saturate})`
-    else if (supportsBackdrop) backdropFilter = `blur(${blur ?? v.blur}px) saturate(${v.saturate})`
-    else background = dark ? 'rgba(44,44,48,0.88)' : 'rgba(250,250,252,0.88)'
+    background = tint ?? (dark ? 'rgba(44,44,48,0.88)' : 'rgba(250,250,252,0.88)')
   }
 
   return (

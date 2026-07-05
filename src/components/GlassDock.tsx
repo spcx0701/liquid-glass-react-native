@@ -36,9 +36,8 @@ export function GlassDock({ apps, onLaunch }: { apps: DockApp[]; onLaunch?: (app
 
   return (
     <GlassSurface
+      material="dock"
       radius={26}
-      refraction={36}
-      bezel={16}
       depth="floating"
       style={{ flexDirection: 'row', alignItems: 'flex-end', padding: PAD }}
     >

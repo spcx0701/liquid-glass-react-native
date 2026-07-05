@@ -30,7 +30,8 @@ export function GlassWindow({
   const sample = (force = false) => {
     if (!sampler) return
     const now = Date.now()
-    if (!force && now - lastSample.current < 120) return
+    // CABackdropLayer.lumaUpdateRate = 0.25 → the system re-samples luma at 4 Hz.
+    if (!force && now - lastSample.current < 250) return
     lastSample.current = now
     const rect = boxRef.current?.getBoundingClientRect?.()
     if (!rect || typeof window === 'undefined') return
@@ -82,7 +83,7 @@ export function GlassWindow({
       }}
     >
       <GlassProvider appearance={auto}>
-        <GlassSurface radius={20} depth="floating" chromatic refraction={58} bezel={18}>
+        <GlassSurface material="chrome" radius={20} depth="floating" chromatic>
           <View
             {...pan.panHandlers}
             style={{

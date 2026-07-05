@@ -41,8 +41,6 @@ export function GlassButton({ title, icon, size = 'md', tinted = false, variant,
           variant={variant}
           radius={s.h / 2}
           tint={tint}
-          refraction={26}
-          bezel={9}
           style={{
             height: s.h,
             paddingHorizontal: s.px,

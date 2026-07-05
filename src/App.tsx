@@ -70,9 +70,9 @@ export default function App() {
   const [winSlider, setWinSlider] = useState(0.4)
   const [winToggle, setWinToggle] = useState(true)
 
-  const [refr, setRefr] = useState(0.5)
-  const [frost, setFrost] = useState(0.4)
-  const [bez, setBez] = useState(0.35)
+  const [refr, setRefr] = useState(0.33) // 40px = 2× the extracted SDF height (20)
+  const [frost, setFrost] = useState(0.5) // 1.0 × recipe blur (45px)
+  const [bez, setBez] = useState(0.5) // curvature 1.0 — the system default
   const [chroma, setChroma] = useState(true)
 
   const push = (icon: string, title: string, body: string) =>
@@ -106,9 +106,10 @@ export default function App() {
                 Liquid Glass
               </Text>
               <Text style={{ fontSize: 15, lineHeight: 22, maxWidth: 660, color: secondary }}>
-                The macOS 26 (Tahoe) material, translated to React Native and rendered here through
-                react-native-web. Every surface refracts, frosts and tints the wallpaper behind it in real time —
-                drag, press and hover things.
+                The macOS 26 (Tahoe) material in React Native, built from parameters extracted from macOS itself —
+                CoreMaterial recipes and QuartzCore's SDF glass effects, not eyeballed values. Menus use the real
+                platters recipe, the dock uses dockLight/Dark, fields use toolbarButtonBackground. Drag, press and
+                hover things.
                 {supportsLensing ? '' : ' (This browser cannot refract backdrops, so you are seeing the frosted fallback — open in Chrome for full lensing.)'}
               </Text>
               <View style={[rowStyle, { zIndex: 60 }]}>
@@ -138,29 +139,28 @@ export default function App() {
             {/* ------------------------------------------------ engine playground */}
             <GlassCard
               title="Core engine — live"
-              subtitle="These sliders drive the engine directly: displacement strength (refraction), frost blur, lens bezel width and chromatic dispersion of the sample surface below."
+              subtitle="These sliders drive Apple's actual glass parameters, extracted from this build of macOS: CASDFGlassDisplacementEffect height/curvature (lens) and the platformContentGlass recipe (blur 45 + its exact color matrix). Frost scales the recipe's blur radius; curvature 1.0 is the system default."
             >
               <View style={{ alignItems: 'center', marginBottom: 16 }}>
                 <GlassSurface
-                  variant="clear"
                   radius={28}
                   refraction={refr * 120}
-                  blur={frost * 14}
-                  bezel={4 + bez * 40}
+                  curvature={bez * 2}
+                  blurScale={frost * 2}
                   chromatic={chroma}
                   depth="floating"
                   style={{ width: '80%', height: 130, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Text style={{ fontSize: 17, fontWeight: '700', color: labelColor(dark) }}>Liquid Glass</Text>
                   <Text style={{ fontSize: 12.5, color: secondary, marginTop: 3 }}>
-                    refraction {Math.round(refr * 120)}px · blur {(frost * 14).toFixed(1)}px · bezel {Math.round(4 + bez * 40)}px
+                    refraction {Math.round(refr * 120)}px · curvature {(bez * 2).toFixed(2)} · blur {(frost * 2 * 45).toFixed(0)}px
                   </Text>
                 </GlassSurface>
               </View>
               <View style={{ gap: 10 }}>
                 <LabeledSlider label="Refraction" value={refr} onChange={setRefr} dark={dark} />
                 <LabeledSlider label="Frost" value={frost} onChange={setFrost} dark={dark} />
-                <LabeledSlider label="Bezel" value={bez} onChange={setBez} dark={dark} />
+                <LabeledSlider label="Curvature" value={bez} onChange={setBez} dark={dark} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <GlassToggle value={chroma} onChange={setChroma} />
                   <Text style={{ fontSize: 13, color: secondary }}>Chromatic dispersion</Text>
@@ -315,8 +315,9 @@ export default function App() {
             </GlassCard>
 
             <Text style={{ fontSize: 12.5, color: labelColor(dark, 'tertiary'), textAlign: 'center', marginTop: 6 }}>
-              Built with React Native primitives on react-native-web · Refraction via SDF displacement maps in
-              backdrop-filter (Chromium) with a frosted fallback (Safari/Firefox) · Analyzed against macOS 26.4 Tahoe
+              Built with React Native primitives on react-native-web · Materials are verbatim CoreMaterial recipes
+              and CASDF lens parameters extracted from macOS 26.4.1 (see docs/EXTRACTION.md) · Refraction via SDF
+              displacement in backdrop-filter (Chromium), frosted fallback elsewhere
             </Text>
           </View>
         </ScrollView>
